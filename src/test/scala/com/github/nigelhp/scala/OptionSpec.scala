@@ -53,6 +53,14 @@ class OptionSpec extends FunSpec {
         assert(!None.nonEmpty)
       }
 
+      it("has a size of 0") {
+        assert(None.size === 0)
+      }
+
+      it("does not contain anything") {
+        assert(!None.contains(42))
+      }
+
       it("does not have a value that can be accessed") {
         intercept[NoSuchElementException] {
           None.get
@@ -61,6 +69,12 @@ class OptionSpec extends FunSpec {
 
       it("and so will always return the default value when specified") {
         assert(None.getOrElse(666) === 666)
+      }
+
+      it("will always return false when exists is invoked") {
+        val option: Option[Int] = None
+
+        assert(!option.exists(_ => true))
       }
 
       // verbose and non-idiomatic
@@ -101,6 +115,32 @@ class OptionSpec extends FunSpec {
         assert(sourceOption.filter(n => true) === None)
         assert(sourceOption.filter(n => false) === None)
       }
+
+      // fold is equivalent to scala.Option map f getOrElse ifEmpty
+      it("will return the default value from fold") {
+        val option: Option[Int] = None
+
+        assert(option.fold(666) {i => i * i} === 666)
+      }
+
+      it("will always return true from forall") {
+        assert(None.forall(_ => true))
+        assert(None.forall(_ => false))
+      }
+
+      it("can be converted to a null value via orNull") {
+        val option: Option[String] = None
+
+        assert(option.orNull === null)
+      }
+
+      it("will always return the supplied right from toLeft") {
+        assert(None.toLeft(42) === Right(42))
+      }
+
+      it("will always return the supplied left from toRight") {
+        assert(None.toRight(42) === Left(42))
+      }
     }
 
     describe("Some") {
@@ -119,12 +159,40 @@ class OptionSpec extends FunSpec {
         assert(!some.isEmpty)
       }
 
+      it("has a size of 1") {
+        assert(Some(42).size === 1)
+      }
+
+      it("contains a value") {
+        assert(Some(42).contains(42))
+        assert(!Some(42).contains(666))
+      }
+
       it("has a value that can be accessed") {
         assert(Some(42).get === 42)
       }
 
       it("and so will always return that value rather than the default when specified") {
         assert(Some(42).getOrElse(666) === 42)
+      }
+
+      it("can also return its value via orNull") {
+        val value = "Hello World!"
+        val option: Option[String] = Some(value)
+
+        assert(option.orNull === value)
+      }
+
+      it("will return true if an exists predicate is satisfied") {
+        val option: Option[Int] = Some(42)
+
+        assert(option.exists(i => i % 2 == 0))
+      }
+
+      it("will return false if an exists predicate is not satisfied") {
+        val option: Option[Int] = Some(42)
+
+        assert(!option.exists(i => i % 2 == 1))
       }
 
       // verbose and non-idiomatic
@@ -168,6 +236,28 @@ class OptionSpec extends FunSpec {
 
       it("will return None if a filter predicate is not satisfied") {
         assert(Some(42).filter(n => false) === None)
+      }
+
+      // fold is equivalent to scala.Option map f getOrElse ifEmpty
+      it("will return the mapped value from fold") {
+        val option: Option[Int] = Some(42)
+
+        assert(option.fold(666) {i => i * i} === 1764)
+      }
+
+      it("will return the result of the predicate from forall") {
+        val option: Option[Int] = Some(42)
+
+        assert(option.forall(_ => true))
+        assert(!option.forall(_ => false))
+      }
+
+      it("will return its value as a left from toLeft") {
+        assert(Some(42).toLeft(666) === Left(42))
+      }
+
+      it("will return its value as a right from toRight") {
+        assert(Some(42).toRight(666) === Right(42))
       }
     }
   }
