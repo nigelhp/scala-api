@@ -38,12 +38,19 @@ class OptionSpec extends FunSpec {
         assert(Option(null) === None)
       }
 
+      it("can be created from the empty factory method") {
+        val option = Option.empty
+
+        assert(option === None)
+      }
+
       it("is not defined") {
         assert(!None.isDefined)
       }
 
       it("is empty") {
         assert(None.isEmpty)
+        assert(!None.nonEmpty)
       }
 
       it("does not have a value that can be accessed") {
@@ -106,7 +113,10 @@ class OptionSpec extends FunSpec {
       }
 
       it("is not empty") {
-        assert(Some(42).nonEmpty)
+        val some = Some(42)
+
+        assert(some.nonEmpty)
+        assert(!some.isEmpty)
       }
 
       it("has a value that can be accessed") {
