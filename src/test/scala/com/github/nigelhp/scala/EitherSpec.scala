@@ -78,7 +78,7 @@ class EitherSpec extends FunSpec {
     }
 
     describe("a left projection") {
-      // can be used to selectively operate on a left
+      // can be used to selectively operate on a Left
 
       describe("get") {
         it("will return the value when invoked on a Left") {
@@ -161,7 +161,8 @@ class EitherSpec extends FunSpec {
           var count = 0
           val either: Either[Int, String] = Right("Hello World!")
 
-          either.left.foreach(i => count += 1)
+          either.left.foreach(_ => count += 1)
+
           assert(count === 0)
         }
       }
@@ -210,19 +211,16 @@ class EitherSpec extends FunSpec {
           assert(Left(42).left.filter(_ < 43) === Some(Left(42)))
         }
         
-        it("returns a None if the supplied predicate is not satisfied when invoked on a Leftt") {
+        it("returns a None if the supplied predicate is not satisfied when invoked on a Left") {
           assert(Left(42).left.filter(_ > 42) === None)
         }
 
         it("returns None when invoked on a Right") {
-          val either: Either[Int, String] = Right("Hello World!")
-
-          assert(either.left.filter(_ => true) === None)
+          assert(Right("Hello World!").left.filter(_ => true) === None)
         }
       }
     }
 
-    // TODO: as per Left
     describe("Right") {
       it("is by convention the success value, when Either is used in an error-handling context") {
         val either: Either[Throwable, Int] = Right(42)
@@ -231,7 +229,7 @@ class EitherSpec extends FunSpec {
       }
 
       it("will be created via cond if the supplied test is true") {
-        assert(Either.cond[Int, String](test = true, right = "Hello World!", left = 42) == Right("Hello World!"))
+        assert(Either.cond[Int, String](test = true, left = 42, right = "Hello World!") == Right("Hello World!"))
       }
 
       it("can be pattern matched") {
@@ -259,50 +257,144 @@ class EitherSpec extends FunSpec {
       }
     }
 
-    // TODO: as per Right projection
-    describe("a right projection") { // can be used to selectively operate on a right
-      it("will return a new Right with the result of applying the supplied function to the original value, " +
-        "when map is applied to a right projection") {
-        val either: Either[Int, String] = Right("Hello World!")
+    describe("a right projection") {
+      // can be used to selectively operate on a Right
 
-        assert(either.right.map(_.reverse) === Right("!dlroW olleH"))
+      describe("get") {
+        it("will return the value when invoked on a Right") {
+          assert(Right("Hello World!").right.get === "Hello World!")
+        }
+
+        it("will throw an exception when invoked on a Left") {
+          intercept[NoSuchElementException] {
+            Left(42).right.get
+          }
+        }
       }
 
-      it("will return the original value unchanged when map is applied to a left projection") {
-        val either: Either[Int, String] = Right("Hello World!")
+      describe("getOrElse") {
+        it("will return the value when invoked on a Right") {
+          assert(Right("Hello World!").right.getOrElse("Goodbye!") === "Hello World!")
+        }
 
-        assert(either.left.map(i => i * i) === Right("Hello World!"))
+        it("will return the supplied default value when invoked on a Left") {
+          assert(Left(42).right.getOrElse("Hello World!") === "Hello World!")
+        }
       }
 
-      it("will return the new Either returned by the supplied function, " +
-        "when flatmap is applied to a right projection") {
-        val either: Either[Int, String] = Right("Hello World!")
+      describe("toOption") {
+        it("will return the value as a Some when invoked on a Right") {
+          assert(Right("Hello World!").right.toOption === Some("Hello World!"))
+        }
 
-        assert(either.right.flatMap(s => Left(BigInt(s.length))) === Left(BigInt(12)))
-        assert(either.right.flatMap(s => Right(s.reverse)) === Right("!dlroW olleH"))
+        it("will return None when invoked on a Left") {
+          assert(Left(42).right.toOption === None)
+        }
       }
 
-      it("will return the original value unchanged when flatmap is applied to a left projection") {
-        val either: Either[Int, String] = Right("Hello World!")
+      describe("toSeq") {
+        it("will return a singleton Seq containing the value when invoked on a Right") {
+          assert(Right("Hello World!").right.toSeq === Seq("Hello World!"))
+        }
 
-        assert(either.left.flatMap(s => Left(42)) === Right("Hello World!"))
-        assert(either.left.flatMap(s => Right(42)) === Right("Hello World!"))
+        it("will return an empty Seq when invoked on a Left") {
+          assert(Left(42).right.toSeq === Seq.empty)
+        }
       }
 
-      it("can be converted to an option via a projection, " +
-        "returning a Some if the projection has the same side as the either's value, else None") {
-        val either: Either[Int, String] = Right("Hello World!")
+      describe("map") {
+        it("will return a Right containing the result of applying the supplied function to the value, " +
+          "when invoked on a Right") {
+          assert(Right("Hello World!").right.map(_.reverse) === Right("!dlroW olleH"))
+        }
 
-        assert(either.left.toOption === None)
-        assert(either.right.toOption === Some("Hello World!"))
+        it("will return the original value when invoked on a Left") {
+          val either: Either[Int, String] = Left(42)
+
+          assert(either.right.map(_.reverse) === Left(42))
+        }
       }
 
-      it("can be converted to a seq via a projection, " +
-        "returning a singleton seq if the projection has the same side as the either's value, else empty") {
-        val either: Either[Int, String] = Right("Hello World!")
+      describe("flatMap") {
+        it("will return the Either resulting from applying the supplied function to the value, when invoked on a Right") {
+          assert(Right("Hello World!").right.flatMap(s => Left(s.reverse)) === Left("!dlroW olleH"))
+          assert(Right("Hello World!").right.flatMap(s => Right(s.length)) === Right(12))
+        }
 
-        assert(either.left.toSeq === Seq.empty[Int])
-        assert(either.right.toSeq === Seq("Hello World!"))
+        it("will return the original value when invoked on a Left") {
+          val either: Either[Int, String] = Left(42)
+
+          assert(either.right.flatMap(s => Left(s.reverse)) === Left(42))
+        }
+      }
+
+      describe("foreach") {
+        it("will apply the supplied function when invoked on a Right") {
+          var count = 0
+
+          assert(Right("Hello World!").right.foreach(s => {count += 1; s.reverse}) === "!dlroW olleH")
+          assert(count === 1)
+        }
+
+        it("will not apply the supplied side-effecting function when invoked on a Left") {
+          var count = 0
+          val either: Either[Int, String] = Left(42)
+
+          either.right.foreach(_ => count += 1)
+
+          assert(count === 0)
+        }
+      }
+
+      it("can be used in a for comprehension") {
+        val result = for {
+          x <- Right("Hello").right
+          y <- Right("World!").right
+        } yield x.length + y.length
+
+        assert(result === Right(11))
+      }
+
+      describe("exists") {
+        it("returns the result of applying the supplied predicate to the value when invoked on a Right") {
+          // note that this is the same behaviour as forall
+          assert(Right("Hello World!").right.exists(_.startsWith("Hello")))
+          assert(!Right("Hello World!").right.exists(_.startsWith("Goodbye")))
+        }
+
+        it("returns false when invoked on a Left") {
+          // note that this behaviour is in contrast to forall
+          assert(!Left(42).right.exists(_ => true))
+        }
+      }
+
+      describe("forall") {
+        it("returns the result of applying the supplied predicate to the value when invoked on a Right") {
+          // note that this is the same behaviour as exists
+          assert(Right("Hello World!").right.forall(_.startsWith("Hello")))
+          assert(!Right("Hello World!").right.forall(_.startsWith("Goodbye")))
+        }
+
+        it("returns true when invoked on a Left") {
+          // note that this behaviour is in contrast to exists
+          val either: Either[Int, String] = Left(42)
+
+          assert(either.right.forall(_ => false))
+        }
+      }
+
+      describe("filter") {
+        it("returns a Some if the supplied predicate is satisfied when invoked on a Right") {
+          assert(Right("Hello World!").right.filter(_.startsWith("Hello")) === Some(Right("Hello World!")))
+        }
+
+        it("returns a None if the supplied predicate is not satisfied when invoked on a Right") {
+          assert(Right("Hello World!").right.filter(_.startsWith("Goodbye")) === None)
+        }
+
+        it("returns a None when invoked on a Left") {
+          assert(Left(42).right.filter(_ => true) === None)
+        }
       }
     }
   }
