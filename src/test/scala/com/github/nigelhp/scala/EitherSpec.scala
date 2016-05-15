@@ -49,7 +49,7 @@ class EitherSpec extends FunSpec {
       }
 
       it("will be created via cond if the supplied test is false") {
-        assert(Either.cond[Int, String](test = false, left = 42, right = "Hello World!") == Left(42))
+        assert(Either.cond[Int, String](test = false, left = 42, right = "Hello World!") === Left(42))
       }
 
       it("can be pattern matched") {
@@ -229,7 +229,7 @@ class EitherSpec extends FunSpec {
       }
 
       it("will be created via cond if the supplied test is true") {
-        assert(Either.cond[Int, String](test = true, left = 42, right = "Hello World!") == Right("Hello World!"))
+        assert(Either.cond[Int, String](test = true, left = 42, right = "Hello World!") === Right("Hello World!"))
       }
 
       it("can be pattern matched") {

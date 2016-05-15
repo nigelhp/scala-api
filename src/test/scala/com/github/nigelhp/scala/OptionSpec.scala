@@ -174,7 +174,8 @@ class OptionSpec extends FunSpec {
 
       describe("orNull") {
         it("returns null") {
-          assert(None.orNull === null)
+          // TODO: eliminate compiler warning
+          assert(None.orNull == null)
         }
       }
 
