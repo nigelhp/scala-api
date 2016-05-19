@@ -7,15 +7,11 @@ class OptionSpec extends FunSpec {
 
   describe("an Optional value") {
     it("can be None") {
-      val none: Option[Int] = None
-
-      none shouldBe a [Option[_]]
+      None shouldBe a [Option[_]]
     }
 
     it("can be Some(value)") {
-      val some: Option[Int] = Some(42)
-
-      some shouldBe a [Option[_]]
+      Some(42) shouldBe a [Option[_]]
     }
 
     it("can be used in a for comprehension, which will eliminate Nones") {
@@ -31,14 +27,12 @@ class OptionSpec extends FunSpec {
     }
 
     describe("None") {
-      it("can be created from a null by a factory method") {
+      it("can be created from a null by the apply factory method") {
         assert(Option(null) === None)
       }
 
-      it("can be created from the empty factory method") {
-        val option = Option.empty
-
-        assert(option === None)
+      it("can be created by the empty factory method") {
+        assert(Option.empty == None)
       }
 
       it("is not defined") {
@@ -63,22 +57,7 @@ class OptionSpec extends FunSpec {
 
       describe("contains") {
         it("returns false") {
-          assert(!None.contains(42))
           assert(!None.contains(None))
-        }
-      }
-
-      describe("get") {
-        it("throws an exception") {
-          intercept[NoSuchElementException] {
-            None.get
-          }
-        }
-      }
-
-      describe("getOrElse") {
-        it("returns the supplied default") {
-          assert(None.getOrElse(666) === 666)
         }
       }
 
@@ -94,6 +73,20 @@ class OptionSpec extends FunSpec {
         }
       }
 
+      describe("get") {
+        it("throws a NoSuchElementException") {
+          intercept[NoSuchElementException] {
+            None.get
+          }
+        }
+      }
+
+      describe("getOrElse") {
+        it("returns the supplied default") {
+          assert(None.getOrElse(666) === 666)
+        }
+      }
+
       // verbose and non-idiomatic
       it("can be pattern matched") {
         val option: Option[Int] = None
@@ -103,22 +96,6 @@ class OptionSpec extends FunSpec {
         }
 
         assert(n === 0)
-      }
-
-      describe("foreach") {
-        it("will not inboke the supplied side-effecting function") {
-          var count = 0
-
-          None.foreach(_ => count += 1)
-
-          assert(count === 0)
-        }
-      }
-
-      describe("map") {
-        it("returns None") {
-          assert(None.map(_ => 42) === None)
-        }
       }
 
       describe("filter") {
@@ -133,6 +110,12 @@ class OptionSpec extends FunSpec {
         }
       }
 
+      describe("map") {
+        it("returns None") {
+          assert(None.map(_ => 42) === None)
+        }
+      }
+
       describe("flatMap") {
         it("returns None") {
           assert(None.flatMap(_ => Some(42)) === None)
@@ -140,21 +123,55 @@ class OptionSpec extends FunSpec {
       }
 
       describe("fold") {
-        // fold is equivalent to scala.Option map f getOrElse ifEmpty
-        it("returns the supplied default value") {
+        it("is equivalent to Option.map(f).getOrElse(ifEmpty) and returns the supplied default value") {
           val option: Option[Int] = None
 
-          assert(option.fold(666) {i => i * i} === 666)
+          assert(option.fold(666) { i => i * i } === 666)
+        }
+      }
+
+      describe("foldLeft") {
+        it("returns the supplied start value") {
+          val option: Option[Int] = None
+
+          assert(option.foldLeft(666)((_:Int, _:Int) => 42) === 666)
+        }
+      }
+
+      describe("foldRight") {
+        it("returns the supplied start value") {
+          val option: Option[Int] = None
+
+          assert(option.foldRight(666)((_:Int, _:Int) => 42) === 666)
+        }
+      }
+
+      describe("foreach") {
+        it("will not invoke the supplied side-effecting function") {
+          var count = 0
+
+          None.foreach(_ => count += 1)
+
+          assert(count === 0)
         }
       }
 
       describe("forall") {
-        it("returns true") {
+        it("returns true regardless of the supplied predicate") {
           assert(None.forall(_ => true))
           assert(None.forall(_ => false))
         }
       }
 
+      describe("collect") {
+        it("returns None") {
+          val pf: PartialFunction[Any, String] = { case s:String => "String" }
+
+          assert(None.collect(pf) === None)
+        }
+      }
+
+      // ->
       describe("toLeft") {
         it("returns the supplied argument as a Right") {
           assert(None.toLeft(42) === Right(42))
@@ -184,12 +201,10 @@ class OptionSpec extends FunSpec {
           assert(None.seq === Seq.empty)
         }
       }
-
-      // TODO: collect
     }
 
     describe("Some") {
-      it("can be created from a value via a factory method") {
+      it("can be created from a value via the apply factory method") {
         assert(Option(42) === Some(42))
       }
 
@@ -198,15 +213,25 @@ class OptionSpec extends FunSpec {
       }
 
       it("is not empty") {
-        val some = Some(42)
+        assert(!Some(42).isEmpty)
+      }
 
-        assert(some.nonEmpty)
-        assert(!some.isEmpty)
+      it("is nonEmpty") {
+        assert(Some(42).nonEmpty)
       }
 
       it("has a size of 1") {
         assert(Some(42).size === 1)
-        assert(Some(42).count(_ => true) === 1)
+      }
+
+      describe("count") {
+        it("returns 1 if the supplied predicate returns true") {
+          assert(Some(42).count(_ => true) === 1)
+        }
+
+        it("returns 0 if the supplied predicate returns false") {
+          assert(Some(42).count(_ => false) === 0)
+        }
       }
 
       describe("contains") {
@@ -216,33 +241,36 @@ class OptionSpec extends FunSpec {
         }
       }
 
+      describe("exists") {
+        it("returns true when the supplied predicate is satisfied") {
+          assert(Some(42).exists(_ => true))
+        }
+
+        it("returns false when the supplied predicate is not satisfied") {
+          assert(!Some(42).exists(_ => false))
+        }
+      }
+
+      describe("find") {
+        it("returns the option when the supplied predicate is satisfied") {
+          assert(Some(42).find(_ => true) === Some(42))
+        }
+
+        it("returns None when the supplied predicate is not satisfied") {
+          assert(Some(42).find(_ => false) === None)
+        }
+      }
+
       describe("get") {
         it("returns the value") {
           assert(Some(42).get === 42)
         }
       }
 
-      it("and so will always return that value rather than the default when specified") {
-        assert(Some(42).getOrElse(666) === 42)
-      }
-
-      it("can also return its value via orNull") {
-        val value = "Hello World!"
-        val option: Option[String] = Some(value)
-
-        assert(option.orNull === value)
-      }
-
-      it("will return true if an exists predicate is satisfied") {
-        val option: Option[Int] = Some(42)
-
-        assert(option.exists(i => i % 2 == 0))
-      }
-
-      it("will return false if an exists predicate is not satisfied") {
-        val option: Option[Int] = Some(42)
-
-        assert(!option.exists(i => i % 2 == 1))
+      describe("getOrElse") {
+        it("returns the value rather than the supplied default") {
+          assert(Some(42).getOrElse(666) === 42)
+        }
       }
 
       // verbose and non-idiomatic
@@ -256,50 +284,97 @@ class OptionSpec extends FunSpec {
         assert(n === 42)
       }
 
-      it("will invoke the supplied side-effecting function once when foreach is called") {
-        var count = 0
-        Some(42).foreach(_ => count += 1)
+      describe("filter") {
+        it("will return the Option if the supplied predicate is satisfied") {
+          assert(Some(42).filter(_ => true) === Some(42))
+        }
 
-        assert(count === 1)
+        it("will return None if the supplied predicate is not satisfied") {
+          assert(Some(42).filter(_ => false) === None)
+        }
       }
 
-      it("will map to another Some") {
-        val sourceOption: Option[Int] = Some(42)
-        val targetOption: Option[String] = sourceOption.map(n => n.toString)
+      describe("filterNot") {
+        it("will return the Option if the supplied predicate is not satisfied") {
+          assert(Some(42).filterNot(_ => false) === Some(42))
+        }
 
-        assert(targetOption.isDefined)
+        it("will return None if the supplied predicate is satisfied") {
+          assert(Some(42).filterNot(_ => true) === None)
+        }
       }
 
-      it("will return a nested Option if the mapping function supplied to map itself returns an Option") {
-        assert(Some(42).map(Option(_)) === Some(Some(42)))
-        assert(Some(42).map(n => None) === Some(None))
+      describe("map") {
+        it("returns a Some containing the result of applying the supplied function") {
+          assert(Some(42).map(i => i * i) === Some(1764))
+        }
+
+        it("returns a nested Option if the supplied mapping function itself returns an Option") {
+          assert(Some(42).map(Option(_)) === Some(Some(42)))
+          assert(Some(42).map(_ => None) === Some(None))
+        }
       }
 
-      it("will return the mapped Option if the mapping function supplied to flatmap returns an Option") {
-        assert(Some(42).flatMap(Option(_)) === Some(42))
-        assert(Some(42).flatMap(n => None) === None)
+      describe("flatMap") {
+        it("returns the Option returned by the supplied mapping function") {
+          assert(Some(42).flatMap(Option(_)) === Some(42))
+          assert(Some(42).flatMap(_ => None) === None)
+        }
       }
 
-      it("will return Some if a filter predicate is satisfied") {
-        assert(Some(42).filter(n => true) === Some(42))
+      describe("fold") {
+        it("is equivalent to Option.map(f).getOrElse(ifEmpty) and returns the mapped value") {
+          assert(Some(42).fold(666) {i => i * i} === 1764)
+        }
       }
 
-      it("will return None if a filter predicate is not satisfied") {
-        assert(Some(42).filter(n => false) === None)
+      describe("foldLeft") {
+        it("returns the result of invoking the supplied function with the start value and the option value") {
+          assert(Some(42).foldLeft(666)(_ + _) === 708)
+        }
       }
 
-      // fold is equivalent to scala.Option map f getOrElse ifEmpty
-      it("will return the mapped value from fold") {
-        val option: Option[Int] = Some(42)
-
-        assert(option.fold(666) {i => i * i} === 1764)
+      describe("foldRight") {
+        it("returns the result of invoking the supplied function with the start value and the option value") {
+          assert(Some(42).foldRight(666)(_ + _) === 708)
+        }
       }
 
-      it("will return the result of the predicate from forall") {
-        val option: Option[Int] = Some(42)
+      describe("foreach") {
+        it("will invoke the supplied side-effecting function once") {
+          var count = 0
 
-        assert(option.forall(_ => true))
-        assert(!option.forall(_ => false))
+          Some(42).foreach(_ => count += 1)
+
+          assert(count === 1)
+        }
+      }
+
+      describe("forall") {
+        it("returns the result of applying the supplied predicate to the option value") {
+          assert(Some(42).forall(_ => true))
+          assert(!Some(42).forall(_ => false))
+        }
+      }
+
+      describe("collect") {
+        val pf: PartialFunction[Any, String] = { case s:String => "String" }
+
+        it("returns a Some containing the result of the partial function when the function is defined for the option value") {         
+          assert(Some("Hello World!").collect(pf) === Some("String"))
+        }
+
+        it("returns None when the partial function is not defined for the option value") {
+          assert(Some(42).collect(pf) === None)
+        }
+      }
+
+      // ->
+      it("can also return its value via orNull") {
+        val value = "Hello World!"
+        val option: Option[String] = Some(value)
+
+        assert(option.orNull === value)
       }
 
       it("will return its value as a left from toLeft") {
@@ -316,8 +391,6 @@ class OptionSpec extends FunSpec {
           assert(Some(42).orElse(Some(666)) === Some(42))
         }
       }
-
-      // TODO: collect
     }
   }
 }
