@@ -171,34 +171,36 @@ class OptionSpec extends FunSpec {
         }
       }
 
-      // ->
-      describe("toLeft") {
-        it("returns the supplied argument as a Right") {
-          assert(None.toLeft(42) === Right(42))
-        }
-      }
-
-      it("will always return the supplied left from toRight") {
-        assert(None.toRight(42) === Left(42))
-      }
-
       describe("orElse") {
         it("returns the else") {
-          assert(None.orElse(None) === None)
           assert(None.orElse(Some(42)) === Some(42))
+          assert(None.orElse(None) === None)
         }
       }
 
       describe("orNull") {
         it("returns null") {
-          // TODO: eliminate compiler warning
-          assert(None.orNull == null)
+          val option: Option[String] = None
+
+          assert(option.orNull === null)
         }
       }
 
-      describe("seq") {
+      describe("toLeft") {
+        it("returns a Right containing the supplied argument") {
+          assert(None.toLeft(42) === Right(42))
+        }
+      }
+
+      describe("toRight") {
+        it("returns a Left containing the supplied argument") {
+          assert(None.toRight(42) === Left(42))
+        }
+      }
+
+      describe("toSeq") {
         it("returns an empty seq") {
-          assert(None.seq === Seq.empty)
+          assert(None.toSeq === Seq.empty)
         }
       }
     }
@@ -369,26 +371,35 @@ class OptionSpec extends FunSpec {
         }
       }
 
-      // ->
-      it("can also return its value via orNull") {
-        val value = "Hello World!"
-        val option: Option[String] = Some(value)
-
-        assert(option.orNull === value)
-      }
-
-      it("will return its value as a left from toLeft") {
-        assert(Some(42).toLeft(666) === Left(42))
-      }
-
-      it("will return its value as a right from toRight") {
-        assert(Some(42).toRight(666) === Right(42))
-      }
-
       describe("orElse") {
-        it("can be chained with orElse") {
-          assert(None.orElse(Some(42)) === Some(42))
+        it("returns the original Option") {
           assert(Some(42).orElse(Some(666)) === Some(42))
+        }
+      }
+
+      describe("orNull") {
+        it("returns the value") {
+          val option: Option[String] = Some("Hello World!")
+
+          assert(option.orNull === "Hello World!")
+        }
+      }
+
+      describe("toLeft") {
+        it("will return a Left containing this option's value") {
+          assert(Some(42).toLeft(666) === Left(42))
+        }
+      }
+
+      describe("toRight") {
+        it("will return a Right containing this option's value") {
+          assert(Some(42).toRight(666) === Right(42))
+        }
+      }
+
+      describe("toSeq") {
+        it("returns a singleton seq containing this option's value") {
+          assert(Some(42).toSeq === Seq(42))
         }
       }
     }
