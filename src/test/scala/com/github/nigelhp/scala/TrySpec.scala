@@ -299,7 +299,7 @@ class TrySpec extends FunSpec {
       }
 
       it("returns the existing Failure when the supplied partial function has no match") {
-        val pf: PartialFunction[Throwable, String] = { case e: IllegalArgumentException => "bad arg"}
+        val pf: PartialFunction[Throwable, String] = { case e: IllegalArgumentException => "bad arg" }
 
         val recovered = failure.recover(pf)
 
@@ -387,7 +387,7 @@ class TrySpec extends FunSpec {
     describe("for comprehension") {
       it("skips subsequent expressions on encountering a Failure") {
         val result = (for {
-          s: String <- Try("Hello World!".substring(20))
+          s: String <- Try("Hello World!".substring(999))
           r = s.reverse
         } yield r)
 
